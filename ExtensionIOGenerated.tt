@@ -5,6 +5,12 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
 <#
+    var endians = new List<string>
+    {
+        "LE",
+        "BE",
+    };
+
     var types = new List<string>
     {
         "Int16",
@@ -37,65 +43,39 @@ namespace Jcw87.IO
 <#}#>
     }
 
-    public static class ExtensionIOGenerated
+    public static partial class ExtensionIO
     {
+<# foreach(var endian in endians) { #>
 <# foreach (var type in types) { #>
-        public static <#=type#> Read<#=type#>LE(this byte[] bytes, int offset)
+        public static <#=type#> Read<#=type#><#=endian#>(this byte[] bytes, int offset)
         {
             var data = bytes.ReadBytes(offset, sizeof(<#=type#>));
-            if (!BitConverter.IsLittleEndian) Array.Reverse(data);
+            if (!Is<#=endian#>) Array.Reverse(data);
             return BitConverter.To<#=type#>(data, 0);
         }
 
-        public static <#=type#> Read<#=type#>BE(this byte[] bytes, int offset)
-        {
-            var data = bytes.ReadBytes(offset, sizeof(<#=type#>));
-            if (BitConverter.IsLittleEndian) Array.Reverse(data);
-            return BitConverter.To<#=type#>(data, 0);
-        }
-
-        public static void WriteLE(this byte[] bytes, int offset, <#=type#> value)
+        public static void Write<#=endian#>(this byte[] bytes, int offset, <#=type#> value)
         {
             BitConverter2.GetBytes(value, bytes, offset);
-            if (!BitConverter.IsLittleEndian) Array.Reverse(bytes, offset, sizeof(<#=type#>));
+            if (!Is<#=endian#>) Array.Reverse(bytes, offset, sizeof(<#=type#>));
         }
 
-        public static void WriteBE(this byte[] bytes, int offset, <#=type#> value)
-        {
-            BitConverter2.GetBytes(value, bytes, offset);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes, offset, sizeof(<#=type#>));
-        }
-
-        public static <#=type#> Read<#=type#>LE(this Stream stream)
+        public static <#=type#> Read<#=type#><#=endian#>(this Stream stream)
         {
             var bytes = new byte[sizeof(<#=type#>)];
             stream.Read(bytes, 0, sizeof(<#=type#>));
-            if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (!Is<#=endian#>) Array.Reverse(bytes);
             return BitConverter.To<#=type#>(bytes, 0);
         }
 
-        public static <#=type#> Read<#=type#>BE(this Stream stream)
-        {
-            var bytes = new byte[sizeof(<#=type#>)];
-            stream.Read(bytes, 0, sizeof(<#=type#>));
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-            return BitConverter.To<#=type#>(bytes, 0);
-        }
-
-        public static void WriteLE(this Stream stream, <#=type#> value)
+        public static void Write<#=endian#>(this Stream stream, <#=type#> value)
         {
             var bytes = BitConverter.GetBytes(value);
-            if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (!Is<#=endian#>) Array.Reverse(bytes);
             stream.Write(bytes, 0, bytes.Length);
         }
 
-        public static void WriteBE(this Stream stream, <#=type#> value)
-        {
-            var bytes = BitConverter.GetBytes(value);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-            stream.Write(bytes, 0, bytes.Length);
-        }
-
+<#}#>
 <#}#>
     }
 
@@ -121,6 +101,7 @@ namespace Jcw87.IO
             if (!m_nativeEndian) Array.Reverse(m_buffer2, 0, sizeof(<#=type#>));
             BaseStream.Write(m_buffer2, 0, sizeof(<#=type#>));
         }
+
 <#}#>
     }
 }

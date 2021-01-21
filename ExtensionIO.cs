@@ -5,8 +5,10 @@ using System.Text;
 
 namespace Jcw87.IO
 {
-    public static class ExtensionIO
+    public static partial class ExtensionIO
     {
+        private static bool IsLE => BitConverter.IsLittleEndian;
+        private static bool IsBE => !BitConverter.IsLittleEndian;
         public static byte ReadByte(this byte[] bytes, int offset) { return bytes[offset]; }
         public static byte[] ReadBytes(this byte[] bytes, int offset, int count)
         {
@@ -22,7 +24,7 @@ namespace Jcw87.IO
         {
             var bytes = new byte[4];
             stream.Read(bytes, 0, 3);
-            if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (!IsLE) Array.Reverse(bytes);
             return BitConverter.ToUInt32(bytes, 0);
         }
 
@@ -30,21 +32,21 @@ namespace Jcw87.IO
         {
             var bytes = new byte[4];
             stream.Read(bytes, 1, 3);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (!IsBE) Array.Reverse(bytes);
             return BitConverter.ToUInt32(bytes, 0);
         }
 
         public static void WriteUInt24LE(this Stream stream, uint value)
         {
             var bytes = BitConverter.GetBytes(value);
-            if (!BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (!IsLE) Array.Reverse(bytes);
             stream.Write(bytes, 0, 3);
         }
 
         public static void WriteUInt24BE(this Stream stream, uint value)
         {
             var bytes = BitConverter.GetBytes(value);
-            if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+            if (!IsBE) Array.Reverse(bytes);
             stream.Write(bytes, 1, 3);
         }
     }
